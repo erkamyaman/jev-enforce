@@ -1,0 +1,12 @@
+{
+  "name": "rulekeeper",
+  "version": "0.1.0",
+  "description": "Make Claude Code actually follow your CLAUDE.md, checked by TypeSafe Jev",
+  "type": "module",
+  "bin": { "rulekeeper": "bin/rulekeeper.js" },
+  "files": ["bin", "src", "hooks", ".claude-plugin"],
+  "engines": { "node": ">=18.17" },
+  "scripts": { "test": "node --test test/*.test.js" },
+  "keywords": ["claude-code", "claude-md", "jev", "typesafe", "hooks"],
+  "license": "MIT"
+}

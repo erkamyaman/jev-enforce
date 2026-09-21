@@ -1,0 +1,28 @@
+{
+  "description": "Checks Claude's replies and file edits against your CLAUDE.md rules with TypeSafe Jev",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/rulekeeper.js\" hook stop",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/rulekeeper.js\" hook post-edit",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
