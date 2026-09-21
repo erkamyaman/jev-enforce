@@ -39,7 +39,7 @@ export async function runHook(event, input, deps = {}) {
   const env = deps.env ?? process.env;
   const home = deps.home ?? homedir();
   const apiKey = env.TYPESAFE_API_KEY;
-  if (!apiKey || env.RULEKEEPER_OFF === '1') return null;
+  if (!apiKey || env.JEV_ENFORCE_OFF === '1') return null;
 
   /** @type {string | undefined} */
   let text;
@@ -56,9 +56,9 @@ export async function runHook(event, input, deps = {}) {
   if (!text || text.trim().length < 20) return null;
 
   const kind = event === 'stop' ? 'reply' : 'code';
-  const threshold = Number(env.RULEKEEPER_THRESHOLD) || 0.8;
+  const threshold = Number(env.JEV_ENFORCE_THRESHOLD) || 0.8;
   const ask = createAsk({ apiKey, fetch: deps.fetch });
-  const cacheDir = env.CLAUDE_PLUGIN_DATA || join(home, '.cache', 'rulekeeper');
+  const cacheDir = env.CLAUDE_PLUGIN_DATA || join(home, '.cache', 'jev-enforce');
   const rules = await loadRules(input.cwd ?? process.cwd(), home, ask, cacheDir);
   const violations = await findViolations({ text, kind, filePath, rules, ask, threshold });
   if (!violations.length) return null;
@@ -67,6 +67,6 @@ export async function runHook(event, input, deps = {}) {
   return {
     decision: 'block',
     reason: formatReason(violations, kind),
-    systemMessage: `rulekeeper: ${n} CLAUDE.md rule${n === 1 ? '' : 's'} broken, sent back to Claude`,
+    systemMessage: `jev-enforce: ${n} CLAUDE.md rule${n === 1 ? '' : 's'} broken, sent back to Claude`,
   };
 }

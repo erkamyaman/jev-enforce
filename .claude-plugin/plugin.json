@@ -1,9 +1,9 @@
 {
-  "name": "rulekeeper",
+  "name": "jev-enforce",
   "version": "0.1.0",
   "description": "Make Claude actually follow your CLAUDE.md: every reply and edit is checked against each rule in one ~100ms TypeSafe Jev request",
   "author": { "name": "erkamyaman", "url": "https://github.com/erkamyaman" },
-  "repository": "https://github.com/erkamyaman/rulekeeper",
+  "repository": "https://github.com/erkamyaman/jev-enforce",
   "license": "MIT",
   "keywords": ["claude-code", "claude-md", "jev", "typesafe", "hooks", "rules"]
 }

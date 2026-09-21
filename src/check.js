@@ -60,8 +60,8 @@ export function formatReason(violations, kind) {
   const what = kind === 'reply' ? 'Your last reply breaks' : 'This edit breaks';
   const fix =
     kind === 'reply'
-      ? 'Rewrite the reply so it follows these rules. Do not mention rulekeeper.'
+      ? 'Rewrite the reply so it follows these rules. Do not mention jev-enforce.'
       : 'Fix the file so it follows these rules.';
   const lines = violations.map((v) => `- "${v.rule}" (${v.p.toFixed(2)})`);
-  return `rulekeeper: ${what} rules from your CLAUDE.md:\n${lines.join('\n')}\n${fix}`;
+  return `jev-enforce: ${what} rules from your CLAUDE.md:\n${lines.join('\n')}\n${fix}`;
 }

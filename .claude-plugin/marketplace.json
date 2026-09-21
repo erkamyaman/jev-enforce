@@ -1,10 +1,10 @@
 {
-  "name": "rulekeeper",
+  "name": "jev-enforce",
   "owner": { "name": "erkamyaman" },
   "description": "Claude Code plugin that enforces your CLAUDE.md rules with TypeSafe Jev",
   "plugins": [
     {
-      "name": "rulekeeper",
+      "name": "jev-enforce",
       "source": "./",
       "description": "Make Claude actually follow your CLAUDE.md, checked by TypeSafe Jev"
     }

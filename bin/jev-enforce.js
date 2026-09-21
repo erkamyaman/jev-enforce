@@ -8,27 +8,27 @@ import { runHook } from '../src/hook.js';
 import { createAsk } from '../src/jev.js';
 import { extractCandidates, findRuleFiles, loadRules } from '../src/rules.js';
 
-const USAGE = `rulekeeper: make Claude Code follow your CLAUDE.md, checked by TypeSafe Jev
+const USAGE = `jev-enforce: make Claude Code follow your CLAUDE.md, checked by TypeSafe Jev
 
-  rulekeeper rules                    list rules found for this directory and what each one constrains
-  rulekeeper check [--as reply|code] [file]
+  jev-enforce rules                    list rules found for this directory and what each one constrains
+  jev-enforce check [--as reply|code] [file]
                                       check a file (or stdin) against your rules; exits 1 on violations
-  rulekeeper hook <stop|post-edit>    Claude Code hook entry point (reads hook JSON on stdin)
+  jev-enforce hook <stop|post-edit>    Claude Code hook entry point (reads hook JSON on stdin)
 
-  env: TYPESAFE_API_KEY (required), RULEKEEPER_THRESHOLD (default 0.8), RULEKEEPER_OFF=1`;
+  env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.8), JEV_ENFORCE_OFF=1`;
 
 const readStdin = () => readFileSync(0, 'utf8');
 
 function requireKey() {
   const apiKey = process.env.TYPESAFE_API_KEY;
   if (!apiKey) {
-    console.error('rulekeeper: set TYPESAFE_API_KEY (get one at https://console.typesafe.ai)');
+    console.error('jev-enforce: set TYPESAFE_API_KEY (get one at https://console.typesafe.ai)');
     process.exit(2);
   }
   return apiKey;
 }
 
-const cacheDir = () => process.env.CLAUDE_PLUGIN_DATA || join(homedir(), '.cache', 'rulekeeper');
+const cacheDir = () => process.env.CLAUDE_PLUGIN_DATA || join(homedir(), '.cache', 'jev-enforce');
 
 async function main() {
   const [cmd, ...args] = process.argv.slice(2);
@@ -40,7 +40,7 @@ async function main() {
       const out = await runHook(event, JSON.parse(readStdin()));
       if (out) process.stdout.write(JSON.stringify(out));
     } catch (err) {
-      console.error(`rulekeeper: ${err instanceof Error ? err.message : err}`);
+      console.error(`jev-enforce: ${err instanceof Error ? err.message : err}`);
     }
     return;
   }
@@ -52,7 +52,7 @@ async function main() {
         console.log(`\n${f}`);
         for (const r of extractCandidates(readFileSync(f, 'utf8'))) console.log(`  ?      ${r}`);
       }
-      console.log('\n(set TYPESAFE_API_KEY to see which rules rulekeeper enforces)');
+      console.log('\n(set TYPESAFE_API_KEY to see which rules jev-enforce enforces)');
       return;
     }
     const rules = await loadRules(cwd, homedir(), createAsk({ apiKey: requireKey() }), cacheDir());
@@ -72,7 +72,7 @@ async function main() {
     const text = !file || file === '-' ? readStdin() : readFileSync(file, 'utf8');
     const ask = createAsk({ apiKey: requireKey() });
     const rules = await loadRules(process.cwd(), homedir(), ask, cacheDir());
-    const threshold = Number(process.env.RULEKEEPER_THRESHOLD) || 0.8;
+    const threshold = Number(process.env.JEV_ENFORCE_THRESHOLD) || 0.8;
     const started = Date.now();
     const violations = await findViolations({ text, kind, filePath: file, rules, ask, threshold });
     const checked = rules.filter((r) => r.scope === kind || r.scope === 'both').length;
@@ -87,6 +87,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`rulekeeper: ${err instanceof Error ? err.message : err}`);
+  console.error(`jev-enforce: ${err instanceof Error ? err.message : err}`);
   process.exit(2);
 });
