@@ -6,9 +6,15 @@
     "rootDir": ".",
     "outDir": "dist",
     "strict": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "skipLibCheck": true,
     "newLine": "lf"
   },
-  "include": ["src", "test"]
+  "include": [
+    "src",
+    "test",
+    "bench"
+  ]
 }
