@@ -4,9 +4,33 @@ Claude Code plugin that makes Claude actually follow your CLAUDE.md: every reply
 
 ## Why
 
-You wrote "no em dashes", "don't add explanatory comments", "never say load-bearing". Claude read it, agreed, and did it anyway three turns later. CLAUDE.md is a suggestion the model weighs against everything else in context, and the longer the session, the weaker it gets.
+### The problem
 
-jev-enforce turns those lines into checks. Jev (TypeSafe's System One model) answers typed yes/no questions instead of generating text, so asking "does this reply break rule N?" for every rule at once costs a fraction of a cent and comes back in about 100ms.
+You put rules in CLAUDE.md: "no em dashes", "don't add explanatory comments", "never say load-bearing". Claude follows them for a while, then breaks them a few turns later.
+
+That happens because CLAUDE.md is only context. Claude reads it once at the start of the session. After that it competes with everything else Claude has seen, like your code, the tool output, and the chat so far. As the session grows, your rules become a smaller part of what Claude pays attention to. Nothing checks the output against them.
+
+### What jev-enforce does
+
+It checks each reply and each file edit against your rules, then sends anything that breaks one back to Claude:
+
+```text
+Claude writes a reply  →  jev-enforce checks it against every rule  →  a rule is broken?
+                                                                       ├─ no:  the reply goes through
+                                                                       └─ yes: Claude gets the rule quoted back and rewrites
+```
+
+Your rules stop being reminders and become checks that run every time.
+
+### Why Jev makes this practical
+
+You could ask a normal LLM "does this reply break any of my rules?", but it would add seconds and real cost to every single turn, and its answer would be text you still have to parse.
+
+Jev is a different kind of model from TypeSafe. It doesn't write text. It answers typed questions, such as yes/no with a probability, and it answers many of them in parallel in one request. So jev-enforce asks one yes/no question per rule ("does this text break rule 3?"), all at once:
+
+- **Fast:** about 100ms for the whole check, so you don't notice it.
+- **Cheap:** a fraction of a cent per check, because Jev charges only for input.
+- **Tunable:** every answer comes with a probability. You choose how sure it must be before Claude is told (0.8 by default).
 
 ## Install
 
