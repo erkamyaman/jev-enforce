@@ -1,4 +1,3 @@
-// @ts-check
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -7,7 +6,7 @@ import { test } from 'node:test';
 import { runHook } from '../src/hook.js';
 import { askAll, createAsk } from '../src/jev.js';
 import { extractCandidates, findRuleFiles } from '../src/rules.js';
-import { fakeJev } from './fake-jev.js';
+import { fakeJev, type FakeLog } from './fake-jev.js';
 
 const CLAUDE_MD = `# Working agreement
 
@@ -60,24 +59,24 @@ test('findRuleFiles collects user and ancestor CLAUDE.md files in load order', (
 });
 
 test('createAsk sends the documented request shape', async () => {
-  const log = {};
+  const log: FakeLog = { calls: [] };
   const ask = createAsk({ apiKey: 'k', fetch: fakeJev(log) });
   await ask({ rules: { r0: 'no em dashes' } }, { r0: { type: 'choice', instructions: 'x', criteria: { a: 'b' } } });
-  const call = /** @type {any} */ (log).calls[0];
+  const call = log.calls[0];
   assert.equal(call.url, 'https://api.typesafe.ai/v1/systemone');
   assert.equal(call.headers.Authorization, 'Bearer k');
   assert.equal(call.req.model, 'jev-latest');
 });
 
 test('askAll batches questions and merges answers', async () => {
-  const log = {};
+  const log: FakeLog = { calls: [] };
   const ask = createAsk({ apiKey: 'k', fetch: fakeJev(log) });
   const questions = Object.fromEntries(
-    Array.from({ length: 7 }, (_, i) => [`v${i}`, { type: /** @type {const} */ ('noul'), instructions: 'x' }]),
+    Array.from({ length: 7 }, (_, i) => [`v${i}`, { type: 'noul' as const, instructions: 'x' }]),
   );
   const answers = await askAll(ask, { text: 'hi' }, questions, 3);
   assert.equal(Object.keys(answers).length, 7);
-  assert.equal(/** @type {any} */ (log).calls.length, 3);
+  assert.equal(log.calls.length, 3);
 });
 
 test('stop hook blocks a reply that breaks a reply rule', async () => {
@@ -142,13 +141,13 @@ test('post-edit hook ignores edits to CLAUDE.md itself', async () => {
 
 test('rule scopes are cached so the second run skips classification', async () => {
   const { home, project, env } = setup();
-  const log = {};
+  const log: FakeLog = { calls: [] };
   const input = { cwd: project, last_assistant_message: 'Fixed the login bug. The token check now runs first.' };
   await runHook('stop', input, { env, home, fetch: fakeJev() });
   await runHook('stop', input, { env, home, fetch: fakeJev(log) });
-  const calls = /** @type {any} */ (log).calls;
+  const calls = log.calls;
   assert.equal(calls.length, 1);
-  assert.equal(Object.values(calls[0].req.questions)[0].type, 'noul');
+  assert.equal((Object.values(calls[0].req.questions)[0] as { type: string }).type, 'noul');
   assert.ok(Object.keys(JSON.parse(readFileSync(join(env.CLAUDE_PLUGIN_DATA, 'scopes.json'), 'utf8'))).length > 0);
 });
 

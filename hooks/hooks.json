@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/jev-enforce.js\" hook stop",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/cli.js\" hook stop",
             "timeout": 30
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/jev-enforce.js\" hook post-edit",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/dist/src/cli.js\" hook post-edit",
             "timeout": 30
           }
         ]

@@ -1,24 +1,27 @@
-// @ts-check
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
-import { askAll } from './jev.js';
+import { askAll, type Ask, type Question } from './jev.js';
 
-/** @typedef {'reply' | 'code' | 'both' | 'none'} Scope */
-/** @typedef {{ text: string, scope: Scope, source: string }} Rule */
+export type Scope = 'reply' | 'code' | 'both' | 'none';
+export interface Rule {
+  text: string;
+  scope: Scope;
+  source: string;
+}
 
-export const SCOPES = {
+export const SCOPES: Record<Scope, string> = {
   reply: 'Constrains how the assistant writes its chat replies to the user: tone, wording, phrasing, punctuation, formatting, length.',
   code: 'Constrains the content of code or files the assistant writes: style, comments, naming, patterns, forbidden APIs or libraries.',
   both: 'Constrains both chat replies and the code or files the assistant writes.',
   none: 'Cannot be checked from one reply or one file edit: workflow, process, when to ask, tool usage, permissions, git actions, facts about the project, or background context.',
 };
 
-/** @param {string} dir */
-function mdFilesIn(dir) {
+const isScope = (s: string): s is Scope => s in SCOPES;
+
+function mdFilesIn(dir: string): string[] {
   if (!existsSync(dir)) return [];
-  /** @type {string[]} */
-  const out = [];
+  const out: string[] = [];
   for (const name of readdirSync(dir).sort()) {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) out.push(...mdFilesIn(p));
@@ -27,15 +30,10 @@ function mdFilesIn(dir) {
   return out;
 }
 
-/**
- * CLAUDE.md files Claude Code would load for `cwd`: user-level, then every ancestor directory down to `cwd`.
- * @param {string} cwd
- * @param {string} home
- */
-export function findRuleFiles(cwd, home) {
+/** CLAUDE.md files Claude Code would load for `cwd`: user-level, then every ancestor directory down to `cwd`. */
+export function findRuleFiles(cwd: string, home: string): string[] {
   const files = [join(home, '.claude', 'CLAUDE.md'), ...mdFilesIn(join(home, '.claude', 'rules'))];
-  /** @type {string[]} */
-  const dirs = [];
+  const dirs: string[] = [];
   for (let d = cwd; ; d = dirname(d)) {
     if (d === home) break;
     dirs.unshift(d);
@@ -48,21 +46,13 @@ export function findRuleFiles(cwd, home) {
   return [...new Set(files)].filter((f) => existsSync(f) && statSync(f).isFile());
 }
 
-/** @param {string} text */
-function splitSentences(text) {
-  return text.split(/(?<=[.!?])\s+(?=[A-Z`"*(])/);
-}
+const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+(?=[A-Z`"*(])/);
 
-/**
- * Pulls candidate rules out of markdown: each bullet is one candidate, prose paragraphs are split into sentences.
- * @param {string} md
- */
-export function extractCandidates(md) {
-  /** @type {string[]} */
-  const out = [];
+/** Pulls candidate rules out of markdown: each bullet is one candidate, prose paragraphs are split into sentences. */
+export function extractCandidates(md: string): string[] {
+  const out: string[] = [];
   let inFence = false;
-  /** @type {string[]} */
-  let buf = [];
+  let buf: string[] = [];
   let isBullet = false;
   const flush = () => {
     if (buf.length) {
@@ -98,20 +88,16 @@ export function extractCandidates(md) {
   return [...new Set(cleaned)].filter((r) => r.length >= 8 && r.length <= 600);
 }
 
-/** @param {string} text */
-const hash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
+const hash = (text: string) => createHash('sha256').update(text).digest('hex').slice(0, 16);
 
-/**
- * Asks Jev which rules constrain replies, code, both, or neither. Results are cached by rule text.
- * @param {{ text: string, source: string }[]} candidates
- * @param {import('./jev.js').Ask} ask
- * @param {string} cacheDir
- * @returns {Promise<Rule[]>}
- */
-export async function classify(candidates, ask, cacheDir) {
+/** Asks Jev which rules constrain replies, code, both, or neither. Results are cached by rule text. */
+export async function classify(
+  candidates: { text: string; source: string }[],
+  ask: Ask,
+  cacheDir: string,
+): Promise<Rule[]> {
   const cacheFile = join(cacheDir, 'scopes.json');
-  /** @type {Record<string, Scope>} */
-  let cache = {};
+  let cache: Record<string, Scope> = {};
   try {
     cache = JSON.parse(readFileSync(cacheFile, 'utf8'));
   } catch {}
@@ -122,16 +108,13 @@ export async function classify(candidates, ask, cacheDir) {
       context: 'Instructions a developer wrote in CLAUDE.md for an AI coding assistant.',
       rules: Object.fromEntries(missing.map((t, i) => [`r${i}`, t])),
     };
-    const questions = Object.fromEntries(
-      missing.map((_, i) => [
-        `r${i}`,
-        { type: /** @type {const} */ ('choice'), instructions: `What does rule r${i} constrain?`, criteria: SCOPES },
-      ]),
+    const questions: Record<string, Question> = Object.fromEntries(
+      missing.map((_, i) => [`r${i}`, { type: 'choice', instructions: `What does rule r${i} constrain?`, criteria: SCOPES }]),
     );
     const answers = await askAll(ask, state, questions);
     missing.forEach((t, i) => {
       const a = answers[`r${i}`];
-      if (a && a.type === 'choice' && a.choice in SCOPES) cache[hash(t)] = /** @type {Scope} */ (a.choice);
+      if (a?.type === 'choice' && isScope(a.choice)) cache[hash(t)] = a.choice;
     });
     mkdirSync(cacheDir, { recursive: true });
     writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
@@ -139,13 +122,7 @@ export async function classify(candidates, ask, cacheDir) {
   return candidates.map((c) => ({ ...c, scope: cache[hash(c.text)] ?? 'none' }));
 }
 
-/**
- * @param {string} cwd
- * @param {string} home
- * @param {import('./jev.js').Ask} ask
- * @param {string} cacheDir
- */
-export async function loadRules(cwd, home, ask, cacheDir) {
+export async function loadRules(cwd: string, home: string, ask: Ask, cacheDir: string): Promise<Rule[]> {
   const candidates = findRuleFiles(cwd, home).flatMap((source) =>
     extractCandidates(readFileSync(source, 'utf8')).map((text) => ({ text, source })),
   );

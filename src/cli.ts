@@ -1,25 +1,25 @@
 #!/usr/bin/env node
-// @ts-check
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { findViolations } from '../src/check.js';
-import { runHook } from '../src/hook.js';
-import { createAsk } from '../src/jev.js';
-import { extractCandidates, findRuleFiles, loadRules } from '../src/rules.js';
+import { findViolations } from './check.js';
+import { runHook } from './hook.js';
+import { createAsk } from './jev.js';
+import { extractCandidates, findRuleFiles, loadRules } from './rules.js';
 
 const USAGE = `jev-enforce: make Claude Code follow your CLAUDE.md, checked by TypeSafe Jev
 
   jev-enforce rules                    list rules found for this directory and what each one constrains
   jev-enforce check [--as reply|code] [file]
-                                      check a file (or stdin) against your rules; exits 1 on violations
+                                       check a file (or stdin) against your rules; exits 1 on violations
   jev-enforce hook <stop|post-edit>    Claude Code hook entry point (reads hook JSON on stdin)
 
   env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.8), JEV_ENFORCE_OFF=1`;
 
 const readStdin = () => readFileSync(0, 'utf8');
+const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
-function requireKey() {
+function requireKey(): string {
   const apiKey = process.env.TYPESAFE_API_KEY;
   if (!apiKey) {
     console.error('jev-enforce: set TYPESAFE_API_KEY (get one at https://console.typesafe.ai)');
@@ -40,7 +40,7 @@ async function main() {
       const out = await runHook(event, JSON.parse(readStdin()));
       if (out) process.stdout.write(JSON.stringify(out));
     } catch (err) {
-      console.error(`jev-enforce: ${err instanceof Error ? err.message : err}`);
+      console.error(`jev-enforce: ${message(err)}`);
     }
     return;
   }
@@ -87,6 +87,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(`jev-enforce: ${err instanceof Error ? err.message : err}`);
+  console.error(`jev-enforce: ${message(err)}`);
   process.exit(2);
 });

@@ -1,18 +1,37 @@
-// @ts-check
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { findViolations, formatReason } from './check.js';
 import { createAsk } from './jev.js';
 import { loadRules } from './rules.js';
 
-/**
- * @typedef {{ cwd?: string, stop_hook_active?: boolean, last_assistant_message?: string,
- *   tool_name?: string, tool_input?: Record<string, any> }} HookInput
- * @typedef {{ env?: NodeJS.ProcessEnv, fetch?: typeof fetch, home?: string }} Deps
- */
+export interface HookInput {
+  cwd?: string;
+  stop_hook_active?: boolean;
+  last_assistant_message?: string;
+  tool_name?: string;
+  tool_input?: {
+    file_path?: string;
+    new_string?: string;
+    content?: string;
+    edits?: { new_string?: string }[];
+  };
+}
 
-/** @param {HookInput} input */
-function editedText(input) {
+export interface HookOutput {
+  decision: 'block';
+  reason: string;
+  systemMessage: string;
+}
+
+export interface Deps {
+  env?: NodeJS.ProcessEnv;
+  fetch?: typeof fetch;
+  home?: string;
+}
+
+export type HookEvent = 'stop' | 'post-edit';
+
+function editedText(input: HookInput): string | undefined {
   const t = input.tool_input ?? {};
   switch (input.tool_name) {
     case 'Edit':
@@ -26,25 +45,18 @@ function editedText(input) {
   }
 }
 
-/** @param {string} filePath */
-const isRuleFile = (filePath) => /^CLAUDE.*\.md$/i.test(basename(filePath)) || /[\\/]\.claude[\\/]rules[\\/]/.test(filePath);
+const isRuleFile = (filePath: string) =>
+  /^CLAUDE.*\.md$/i.test(basename(filePath)) || /[\\/]\.claude[\\/]rules[\\/]/.test(filePath);
 
-/**
- * Runs one hook event. Returns the JSON to print, or null to let Claude continue untouched.
- * @param {'stop' | 'post-edit'} event
- * @param {HookInput} input
- * @param {Deps} [deps]
- */
-export async function runHook(event, input, deps = {}) {
+/** Runs one hook event. Returns the JSON to print, or null to let Claude continue untouched. */
+export async function runHook(event: HookEvent, input: HookInput, deps: Deps = {}): Promise<HookOutput | null> {
   const env = deps.env ?? process.env;
   const home = deps.home ?? homedir();
   const apiKey = env.TYPESAFE_API_KEY;
   if (!apiKey || env.JEV_ENFORCE_OFF === '1') return null;
 
-  /** @type {string | undefined} */
-  let text;
-  /** @type {string | undefined} */
-  let filePath;
+  let text: string | undefined;
+  let filePath: string | undefined;
   if (event === 'stop') {
     if (input.stop_hook_active) return null;
     text = input.last_assistant_message;

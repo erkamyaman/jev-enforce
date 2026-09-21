@@ -33,7 +33,7 @@ Without a key the hooks do nothing, so installing it can never break a session.
 
 ## Try it without Claude Code
 
-From a clone (`npm link` puts `jev-enforce` on your PATH):
+From a clone (`npm install && npm run build && npm link` puts `jev-enforce` on your PATH):
 
 ```sh
 jev-enforce rules                        # which rules were found and how each is classified
@@ -60,10 +60,11 @@ jev-enforce check --as code src/app.ts   # exits 1 if a rule is broken
 ## Development
 
 ```sh
-npm test
+npm install
+npm test          # compiles src/ and test/, then runs the tests against the compiled output
 ```
 
-No runtime dependencies. Tests use a fake Jev, so they run offline.
+Written in TypeScript. The compiled `dist/src/` is committed because Claude Code runs plugin hooks straight from the repo with no build step, so run `npm run build` and commit `dist/src/` with every source change (`npm run check-dist` fails if they are out of sync). No runtime dependencies. Tests use a fake Jev, so they run offline.
 
 ## License
 

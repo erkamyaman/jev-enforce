@@ -1,25 +1,32 @@
-// @ts-check
-import { askAll } from './jev.js';
+import { askAll, type Ask, type Question } from './jev.js';
+import type { Rule } from './rules.js';
 
 export const MAX_TEXT_CHARS = 60000;
 
-/** @typedef {'reply' | 'code'} Kind */
-/** @typedef {{ rule: string, source: string, p: number }} Violation */
+export type Kind = 'reply' | 'code';
+export interface Violation {
+  rule: string;
+  source: string;
+  p: number;
+}
 
-/** @param {string} text */
-function fit(text) {
+function fit(text: string): string {
   if (text.length <= MAX_TEXT_CHARS) return text;
   const half = MAX_TEXT_CHARS / 2;
   return `${text.slice(0, half)}\n[... ${text.length - MAX_TEXT_CHARS} chars omitted ...]\n${text.slice(-half)}`;
 }
 
-/**
- * Checks one reply or one file edit against every applicable rule in a single parallel Jev pass.
- * @param {{ text: string, kind: Kind, filePath?: string, rules: import('./rules.js').Rule[],
- *   ask: import('./jev.js').Ask, threshold: number }} opts
- * @returns {Promise<Violation[]>}
- */
-export async function findViolations({ text, kind, filePath, rules, ask, threshold }) {
+export interface CheckOptions {
+  text: string;
+  kind: Kind;
+  filePath?: string;
+  rules: Rule[];
+  ask: Ask;
+  threshold: number;
+}
+
+/** Checks one reply or one file edit against every applicable rule in a single parallel Jev pass. */
+export async function findViolations({ text, kind, filePath, rules, ask, threshold }: CheckOptions): Promise<Violation[]> {
   const applicable = rules.filter((r) => r.scope === kind || r.scope === 'both');
   if (!applicable.length || !text.trim()) return [];
 
@@ -28,11 +35,11 @@ export async function findViolations({ text, kind, filePath, rules, ask, thresho
       ? { kind: 'A chat reply an AI coding assistant wrote to the developer', text: fit(text) }
       : { kind: 'Text an AI coding assistant just wrote into a file', file: filePath ?? '', text: fit(text) };
 
-  const questions = Object.fromEntries(
+  const questions: Record<string, Question> = Object.fromEntries(
     applicable.map((r, i) => [
       `v${i}`,
       {
-        type: /** @type {const} */ ('noul'),
+        type: 'noul',
         instructions: `Rule: "${r.text}"\nDoes the text break this rule?`,
         criteria: {
           true: 'The text clearly breaks the rule.',
@@ -46,17 +53,13 @@ export async function findViolations({ text, kind, filePath, rules, ask, thresho
   return applicable
     .map((r, i) => {
       const a = answers[`v${i}`];
-      return { rule: r.text, source: r.source, p: a && a.type === 'noul' ? a.noul : 0 };
+      return { rule: r.text, source: r.source, p: a?.type === 'noul' ? a.noul : 0 };
     })
     .filter((v) => v.p >= threshold)
     .sort((a, b) => b.p - a.p);
 }
 
-/**
- * @param {Violation[]} violations
- * @param {Kind} kind
- */
-export function formatReason(violations, kind) {
+export function formatReason(violations: Violation[], kind: Kind): string {
   const what = kind === 'reply' ? 'Your last reply breaks' : 'This edit breaks';
   const fix =
     kind === 'reply'

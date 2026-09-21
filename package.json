@@ -3,10 +3,32 @@
   "version": "0.1.0",
   "description": "Make Claude Code actually follow your CLAUDE.md, checked by TypeSafe Jev",
   "type": "module",
-  "bin": { "jev-enforce": "bin/jev-enforce.js" },
-  "files": ["bin", "src", "hooks", ".claude-plugin"],
-  "engines": { "node": ">=18.17" },
-  "scripts": { "test": "node --test test/*.test.js" },
-  "keywords": ["claude-code", "claude-md", "jev", "typesafe", "hooks"],
-  "license": "MIT"
+  "bin": {
+    "jev-enforce": "dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "hooks",
+    ".claude-plugin"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "tsc -p . && node --test dist/test/*.test.js",
+    "check-dist": "tsc -p . && git diff --exit-code -- dist/src"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-md",
+    "jev",
+    "typesafe",
+    "hooks"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^7.0.2"
+  }
 }
