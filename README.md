@@ -2,16 +2,10 @@
 
 Claude Code plugin that checks every reply and every file edit against your CLAUDE.md, using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
 
-```console
-$ jev-enforce check --as code src/orders.ts
-✗ 0.98  Use the shared `apiFetch` wrapper for outbound HTTP. Never call `fetch` or an HTTP library directly.
-✗ 0.98  Never log request bodies, tokens, or anything from the `Authorization` header.
-✗ 0.97  Route handlers must not touch the database directly. Go through a repository in `src/repo`.
-✗ 0.97  Never cast to `any` to silence a type error.
-✗ 0.94  Every endpoint that reads user data must check the caller's authorization first.
-✗ 0.91  Money is always an integer number of cents. Never use a float for money.
-6 of 11 rules broken (350ms)
-```
+[![jev-enforce catching six broken rules in one check](demo/demo.png)](demo/demo.mov)
+
+<sub><a href="demo/demo.mov">▶ 9 second demo</a> · the handler it is checking is <a href="demo/src/orders.ts">demo/src/orders.ts</a></sub>
+
 
 ## Why
 
