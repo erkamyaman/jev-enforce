@@ -1,7 +1,9 @@
 # jev-enforce
 
 [![npm](https://img.shields.io/npm/v/jev-enforce?color=cb3837&logo=npm)](https://www.npmjs.com/package/jev-enforce)
+[![downloads](https://img.shields.io/npm/dw/jev-enforce)](https://www.npmjs.com/package/jev-enforce)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-db61a2?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/erkamyaman)
 
 Claude Code plugin that checks every reply and every file edit against your CLAUDE.md, using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
 
@@ -93,6 +95,10 @@ npm test
 ```
 
 TypeScript, no runtime dependencies, tests run offline against a fake Jev. `dist/src/` is committed because Claude Code runs plugin hooks straight from the repo, so run `npm run build` before committing (`npm run check-dist` verifies).
+
+## Sponsor
+
+If this saves you from one more "I told it not to do that" moment, you can [sponsor the work](https://github.com/sponsors/erkamyaman).
 
 ## License
 
