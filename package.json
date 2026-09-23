@@ -1,6 +1,6 @@
 {
   "name": "jev-enforce",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Make Claude Code actually follow your CLAUDE.md, checked by TypeSafe Jev",
   "type": "module",
   "bin": {
