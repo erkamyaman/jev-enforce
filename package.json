@@ -1,6 +1,6 @@
 {
   "name": "jev-enforce",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Make Claude Code actually follow your CLAUDE.md, checked by TypeSafe Jev",
   "type": "module",
   "bin": {
@@ -31,5 +31,14 @@
   "devDependencies": {
     "@types/node": "^26.6.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erkamyaman/jev-enforce.git"
+  },
+  "homepage": "https://github.com/erkamyaman/jev-enforce#readme",
+  "bugs": {
+    "url": "https://github.com/erkamyaman/jev-enforce/issues"
+  },
+  "author": "erkamyaman"
 }
