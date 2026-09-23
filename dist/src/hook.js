@@ -16,7 +16,7 @@ function editedText(input) {
             return undefined;
     }
 }
-const isRuleFile = (filePath) => /^CLAUDE.*\.md$/i.test(basename(filePath)) || /[\\/]\.claude[\\/]rules[\\/]/.test(filePath);
+const isRuleFile = (filePath) => /^(CLAUDE|AGENTS).*\.md$/i.test(basename(filePath)) || /[\\/]\.claude[\\/]rules[\\/]/.test(filePath);
 /** Runs one hook event. Returns the JSON to print, or null to let Claude continue untouched. */
 export async function runHook(event, input, deps = {}) {
     const env = deps.env ?? process.env;

@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-db61a2?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/erkamyaman)
 
-Claude Code plugin that checks every reply and every file edit against your CLAUDE.md, using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
+Claude Code plugin that checks every reply and every file edit against your CLAUDE.md (or AGENTS.md), using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
 
 ![jev-enforce catching six broken rules in one check](demo/demo.gif)
 
@@ -42,7 +42,7 @@ No key, no checks. It cannot break a session.
 
 ## How it works
 
-- Reads the same rule files Claude Code does: `~/.claude/CLAUDE.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**`. Each bullet is one rule.
+- Reads the same rule files Claude Code does: `~/.claude/CLAUDE.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**`, and `AGENTS.md` when the project has no CLAUDE.md, matching Claude Code's own precedence. Each bullet is one rule.
 - Sorts each rule once, cached: does it constrain replies, code, both, or neither. Git and workflow rules land in neither and are skipped.
 - A `Stop` hook checks the final reply. A `PostToolUse` hook checks Edit, Write and MultiEdit.
 - Broken rules come back as `decision: "block"` with the rules quoted, so Claude fixes it before you see it. Once per turn, so it cannot loop.

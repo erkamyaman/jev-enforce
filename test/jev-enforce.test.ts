@@ -156,3 +156,47 @@ test('without an API key the hooks do nothing', async () => {
   const out = await runHook('stop', { cwd: project, last_assistant_message: 'Happy to help — sure thing, friend.' }, { env: {}, home });
   assert.equal(out, null);
 });
+
+test('AGENTS.md is read when the project has no CLAUDE.md', () => {
+  const { home, project } = setup();
+  writeFileSync(join(project, 'AGENTS.md'), '- rule from agents file');
+  mkdirSync(join(project, '.claude'), { recursive: true });
+  writeFileSync(join(project, '.claude', 'AGENTS.md'), '- another agents rule');
+  assert.deepEqual(findRuleFiles(project, home), [
+    join(home, '.claude', 'CLAUDE.md'),
+    join(project, 'AGENTS.md'),
+    join(project, '.claude', 'AGENTS.md'),
+  ]);
+});
+
+test('a project CLAUDE.md wins over AGENTS.md, as in Claude Code', () => {
+  const { home, project } = setup();
+  writeFileSync(join(project, 'AGENTS.md'), '- rule from agents file');
+  writeFileSync(join(home, 'code', 'CLAUDE.md'), '- rule from an ancestor claude file');
+  assert.deepEqual(findRuleFiles(project, home), [
+    join(home, '.claude', 'CLAUDE.md'),
+    join(home, 'code', 'CLAUDE.md'),
+  ]);
+});
+
+test('.claude/rules files load alongside AGENTS.md', () => {
+  const { home, project } = setup();
+  writeFileSync(join(project, 'AGENTS.md'), '- rule from agents file');
+  mkdirSync(join(project, '.claude', 'rules'), { recursive: true });
+  writeFileSync(join(project, '.claude', 'rules', 'style.md'), '- a scoped rule here');
+  assert.deepEqual(findRuleFiles(project, home), [
+    join(home, '.claude', 'CLAUDE.md'),
+    join(project, 'AGENTS.md'),
+    join(project, '.claude', 'rules', 'style.md'),
+  ]);
+});
+
+test('post-edit hook ignores edits to AGENTS.md itself', async () => {
+  const { home, project, env } = setup();
+  const out = await runHook(
+    'post-edit',
+    { cwd: project, tool_name: 'Write', tool_input: { file_path: join(project, 'AGENTS.md'), content: '// a comment line here' } },
+    { env, home, fetch: fakeJev() },
+  );
+  assert.equal(out, null);
+});

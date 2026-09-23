@@ -30,20 +30,35 @@ function mdFilesIn(dir: string): string[] {
   return out;
 }
 
-/** CLAUDE.md files Claude Code would load for `cwd`: user-level, then every ancestor directory down to `cwd`. */
+const isFile = (f: string) => existsSync(f) && statSync(f).isFile();
+
+/**
+ * The instruction files Claude Code would load for `cwd`: user-level files, then every ancestor
+ * directory down to `cwd`. AGENTS.md follows Claude Code's default `claude-md-or-agents-md` rule,
+ * so it is read only when no project-level CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md exists.
+ */
 export function findRuleFiles(cwd: string, home: string): string[] {
-  const files = [join(home, '.claude', 'CLAUDE.md'), ...mdFilesIn(join(home, '.claude', 'rules'))];
+  const userFiles = [join(home, '.claude', 'CLAUDE.md'), ...mdFilesIn(join(home, '.claude', 'rules'))];
   const dirs: string[] = [];
   for (let d = cwd; ; d = dirname(d)) {
     if (d === home) break;
     dirs.unshift(d);
     if (d === parse(d).root) break;
   }
+
+  const claudeFiles: string[] = [];
+  const ruleDirFiles: string[] = [];
   for (const d of dirs) {
-    files.push(join(d, 'CLAUDE.md'), join(d, '.claude', 'CLAUDE.md'), join(d, 'CLAUDE.local.md'));
-    files.push(...mdFilesIn(join(d, '.claude', 'rules')));
+    claudeFiles.push(join(d, 'CLAUDE.md'), join(d, '.claude', 'CLAUDE.md'), join(d, 'CLAUDE.local.md'));
+    ruleDirFiles.push(...mdFilesIn(join(d, '.claude', 'rules')));
   }
-  return [...new Set(files)].filter((f) => existsSync(f) && statSync(f).isFile());
+
+  const projectFiles = claudeFiles.filter(isFile);
+  if (!projectFiles.length) {
+    for (const d of dirs) projectFiles.push(join(d, 'AGENTS.md'), join(d, '.claude', 'AGENTS.md'));
+  }
+
+  return [...new Set([...userFiles, ...projectFiles, ...ruleDirFiles])].filter(isFile);
 }
 
 const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+(?=[A-Z`"*(])/);
