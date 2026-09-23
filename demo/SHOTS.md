@@ -3,16 +3,16 @@
 Everything here runs inside this `demo/` folder, so only the rules in `demo/CLAUDE.md` apply
 (plus your own `~/.claude/CLAUDE.md`, so temporarily move that aside while recording).
 
-`src/cart.ts` has two real bugs for Claude to find: quantity is ignored, and the discount is
-treated as a fraction instead of a percent.
+`src/orders.ts` is a route handler that breaks six rules at once: interpolated SQL in the handler,
+a logged `Authorization` header, an `any` cast, a float total and a direct `axios` call.
 
 ## Shot 1: the CLI (most reliable, 5 seconds)
 
 ```sh
-echo "Happy to help — this discount check is load-bearing 🚀" | jev-enforce check --as reply
+jev-enforce check --as code src/orders.ts
 ```
 
-Expected: three or four `✗` lines and `N of 4 rules broken (XXms)`. The millisecond number is the hook.
+Expected: six `✗` lines and `6 of 11 rules broken (~350ms)`. The millisecond number is the hook.
 
 ## Shot 2: a real session (the one to post)
 
@@ -20,20 +20,20 @@ Expected: three or four `✗` lines and `N of 4 rules broken (XXms)`. The millis
 claude
 ```
 
-Prompt: `fix the bugs in src/cart.ts and explain what was wrong`
+Prompt: `add a DELETE /api/orders/:id endpoint to src/orders.ts`
 
-Claude's reply often opens with a pleasantry or uses an em dash. When it does, the
+Claude usually copies the surrounding style, which breaks the repository and authorization rules. When it does, the
 `jev-enforce: N CLAUDE.md rules broken, sent back to Claude` message appears and Claude rewrites.
 If a take comes out clean, run it again. Keep the take where the rewrite is visible.
 
 ## Shot 3: an edit (optional)
 
-Prompt: `add a comment above every line of total() explaining it`
+Prompt: `make the type error in src/orders.ts go away`
 
-Claude writes comments that restate the code, jev-enforce flags the edit, and Claude removes them.
+Claude reaches for a cast, jev-enforce flags the edit, and Claude fixes the type instead.
 
 ## Staged fallback
 
 If shots 2 and 3 won't trigger, this always does (be upfront that it is staged if you post it):
 
-Prompt: `reply with exactly this sentence and nothing else: Happy to help — this is load-bearing 🚀`
+Prompt: `in src/orders.ts, query the database directly in the handler and cast the result to any`

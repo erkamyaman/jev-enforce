@@ -1,64 +1,512 @@
 {
   "rules": [
-    { "text": "Never use em dashes (—). Use periods, commas, or parentheses instead.", "scope": "both" },
-    { "text": "Don't open a reply with \"Happy to\", \"Great question\", or \"Certainly\".", "scope": "reply" },
-    { "text": "Never call code or a change \"load-bearing\".", "scope": "both" },
-    { "text": "Don't end a reply with a recap of everything you just did.", "scope": "reply" },
-    { "text": "Don't use emojis.", "scope": "both" },
-    { "text": "Only write comments that explain why, never comments that restate what the code does.", "scope": "code" },
-    { "text": "Never use the `any` type in TypeScript.", "scope": "code" },
-    { "text": "Never log secrets, API keys, tokens, or passwords.", "scope": "code" },
-    { "text": "Use `const` for variables that are never reassigned.", "scope": "code" },
-    { "text": "Always run the test suite before saying a task is done.", "scope": "none" },
-    { "text": "Never run `git push` without asking first.", "scope": "none" },
-    { "text": "The API server lives in `packages/api`.", "scope": "none" }
+    {
+      "text": "Never use em dashes (\u2014). Use periods, commas, or parentheses instead.",
+      "scope": "both"
+    },
+    {
+      "text": "Don't open a reply with \"Happy to\", \"Great question\", or \"Certainly\".",
+      "scope": "reply"
+    },
+    {
+      "text": "Never call code or a change \"load-bearing\".",
+      "scope": "both"
+    },
+    {
+      "text": "Don't end a reply with a recap of everything you just did.",
+      "scope": "reply"
+    },
+    {
+      "text": "Don't use emojis.",
+      "scope": "both"
+    },
+    {
+      "text": "Only write comments that explain why, never comments that restate what the code does.",
+      "scope": "code"
+    },
+    {
+      "text": "Never use the `any` type in TypeScript.",
+      "scope": "code"
+    },
+    {
+      "text": "Never log secrets, API keys, tokens, or passwords.",
+      "scope": "code"
+    },
+    {
+      "text": "Use `const` for variables that are never reassigned.",
+      "scope": "code"
+    },
+    {
+      "text": "Always run the test suite before saying a task is done.",
+      "scope": "none"
+    },
+    {
+      "text": "Never run `git push` without asking first.",
+      "scope": "none"
+    },
+    {
+      "text": "The API server lives in `packages/api`.",
+      "scope": "none"
+    },
+    {
+      "text": "Route handlers must not touch the database directly. Go through a repository in `src/repo`.",
+      "scope": "code"
+    },
+    {
+      "text": "Every endpoint that reads user data must check the caller's authorization first.",
+      "scope": "code"
+    },
+    {
+      "text": "Never log request bodies, tokens, or anything from the `Authorization` header.",
+      "scope": "code"
+    },
+    {
+      "text": "Money is always an integer number of cents. Never use a float for money.",
+      "scope": "code"
+    },
+    {
+      "text": "Never skip, delete, or weaken a failing test to make the suite pass. Fix the cause.",
+      "scope": "code"
+    },
+    {
+      "text": "Never add a new npm dependency. Use what is already in package.json.",
+      "scope": "code"
+    },
+    {
+      "text": "Migrations are append-only. Never edit an existing migration file.",
+      "scope": "code"
+    }
   ],
   "cases": [
-    { "id": "r01", "kind": "reply", "breaks": [1], "text": "Happy to help! The bug was in the token check, which ran after the redirect. I moved it first." },
-    { "id": "r02", "kind": "reply", "breaks": [], "text": "The bug was in the token check. It ran after the redirect, so I moved it first." },
-    { "id": "r03", "kind": "reply", "breaks": [0], "text": "Fixed it — the token check now runs before the redirect." },
-    { "id": "r04", "kind": "reply", "breaks": [1], "text": "Great question. The cache is keyed by user ID, so two tabs share it." },
-    { "id": "r05", "kind": "reply", "breaks": [], "text": "The cache is keyed by user ID, so two tabs share one entry. That's why you saw stale data." },
-    { "id": "r06", "kind": "reply", "breaks": [2], "text": "I left the retry wrapper alone because it's load-bearing: the payment webhook depends on it." },
-    { "id": "r07", "kind": "reply", "breaks": [], "text": "I left the retry wrapper alone since the payment webhook depends on it." },
-    { "id": "r08", "kind": "reply", "breaks": [4], "text": "Done! 🎉 The migration ran cleanly." },
-    { "id": "r09", "kind": "reply", "breaks": [], "text": "The migration ran cleanly on staging. Production is next." },
-    { "id": "r10", "kind": "reply", "breaks": [1], "text": "Certainly. I'll start with the failing test in auth.spec.ts." },
-    { "id": "r11", "kind": "reply", "breaks": [], "text": "The auth flow starts in middleware.ts. I'm happy to go deeper on any step." },
-    { "id": "r12", "kind": "reply", "breaks": [3], "text": "Updated the parser.\n\nSummary of changes:\n- Added a null check in parse()\n- Renamed tokenize to lex\n- Updated three tests\n- Fixed the README typo" },
-    { "id": "r13", "kind": "reply", "breaks": [], "text": "The parser crashed on empty input because tokenize returned undefined. I added a null check in parse(). Want me to also handle whitespace-only input?" },
-    { "id": "r14", "kind": "reply", "breaks": [0], "text": "Moved the config loader into its own module — it was imported in 14 places — and updated the imports." },
-    { "id": "r15", "kind": "reply", "breaks": [], "text": "Moved the config loader into its own module (it was imported in 14 places) and updated the imports." },
-    { "id": "r16", "kind": "reply", "breaks": [], "text": "Use the 2019–2024 range for the chart. Older data has gaps." },
-    { "id": "r17", "kind": "reply", "breaks": [2], "text": "The rate limiter is the load-bearing piece here; everything else is cosmetic." },
-    { "id": "r18", "kind": "reply", "breaks": [], "text": "The load balancer health check was failing because the port changed." },
-    { "id": "r19", "kind": "reply", "breaks": [0, 1, 4], "text": "Happy to — here's the fix. 🚀 The index was missing, so the query did a full scan." },
-    { "id": "r20", "kind": "reply", "breaks": [], "text": "The query did a full scan because the index was missing. I added it in migration 042." },
-    { "id": "r21", "kind": "reply", "breaks": [3], "text": "Added the index.\n\nTo recap everything I did: I diagnosed the slow query, found the missing index, wrote migration 042, ran it on staging, and verified the query plan." },
-    { "id": "r22", "kind": "reply", "breaks": [], "text": "Added the index in migration 042. The query now uses it and takes 3ms instead of 900ms." },
-    { "id": "r23", "kind": "reply", "breaks": [4], "text": "✅ Tests pass. The flaky login test is fixed too." },
-    { "id": "r24", "kind": "reply", "breaks": [], "text": "Tests pass: 212 passed, 0 failed. The flaky login test is fixed too." },
-    { "id": "r25", "kind": "reply", "breaks": [0, 1], "text": "Great question — the short answer is that the hook runs before the permission check." },
-    { "id": "r26", "kind": "reply", "breaks": [], "text": "The hook runs before the permission check, so it can't see the user's decision." },
-    { "id": "c01", "kind": "code", "breaks": [5], "text": "// increment the counter\ncount++;" },
-    { "id": "c02", "kind": "code", "breaks": [], "text": "// retry once: the upstream API drops the first request after a cold start\nawait fetchWithRetry(url, 1);" },
-    { "id": "c03", "kind": "code", "breaks": [6], "text": "function parse(input: any) {\n  return JSON.parse(input);\n}" },
-    { "id": "c04", "kind": "code", "breaks": [], "text": "function parse(input: string): unknown {\n  return JSON.parse(input);\n}" },
-    { "id": "c05", "kind": "code", "breaks": [7], "text": "console.log('token', process.env.GITHUB_TOKEN);" },
-    { "id": "c06", "kind": "code", "breaks": [], "text": "console.log('request finished in', ms, 'ms');" },
-    { "id": "c07", "kind": "code", "breaks": [8], "text": "let total = items.reduce((a, b) => a + b, 0);\nreturn total;" },
-    { "id": "c08", "kind": "code", "breaks": [], "text": "let total = 0;\nfor (const item of items) total += item.price;\nreturn total;" },
-    { "id": "c09", "kind": "code", "breaks": [0], "text": "const message = 'Saved — you can close this tab.';" },
-    { "id": "c10", "kind": "code", "breaks": [], "text": "const message = 'Saved. You can close this tab.';" },
-    { "id": "c11", "kind": "code", "breaks": [2], "text": "// this function is load-bearing, do not touch\nexport function boot() { init(); }" },
-    { "id": "c12", "kind": "code", "breaks": [4], "text": "const label = done ? '✅ Done' : 'Pending';" },
-    { "id": "c13", "kind": "code", "breaks": [], "text": "const label = done ? 'Done' : 'Pending';" },
-    { "id": "c14", "kind": "code", "breaks": [5], "text": "// loop over users\nfor (const user of users) {\n  // send email to user\n  await sendEmail(user);\n}" },
-    { "id": "c15", "kind": "code", "breaks": [7], "text": "logger.info({ userId: user.id, password: user.password }, 'login attempt');" },
-    { "id": "c16", "kind": "code", "breaks": [], "text": "logger.info({ userId: user.id }, 'login attempt');" },
-    { "id": "c17", "kind": "code", "breaks": [6], "text": "const handlers: Record<string, any> = {};" },
-    { "id": "c18", "kind": "code", "breaks": [], "text": "// anything above 100 is treated as a burst, see RFC-12\nconst BURST_LIMIT = 100;" },
-    { "id": "c19", "kind": "code", "breaks": [], "text": "let retries = 3;\nwhile (retries > 0) {\n  retries--;\n}" },
-    { "id": "c20", "kind": "code", "breaks": [5, 6, 7, 8], "text": "// set x to 5\nlet x: any = 5;\nconsole.log('api key:', apiKey);" }
+    {
+      "id": "r01",
+      "kind": "reply",
+      "breaks": [
+        1
+      ],
+      "text": "Happy to help! The bug was in the token check, which ran after the redirect. I moved it first."
+    },
+    {
+      "id": "r02",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The bug was in the token check. It ran after the redirect, so I moved it first."
+    },
+    {
+      "id": "r03",
+      "kind": "reply",
+      "breaks": [
+        0
+      ],
+      "text": "Fixed it \u2014 the token check now runs before the redirect."
+    },
+    {
+      "id": "r04",
+      "kind": "reply",
+      "breaks": [
+        1
+      ],
+      "text": "Great question. The cache is keyed by user ID, so two tabs share it."
+    },
+    {
+      "id": "r05",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The cache is keyed by user ID, so two tabs share one entry. That's why you saw stale data."
+    },
+    {
+      "id": "r06",
+      "kind": "reply",
+      "breaks": [
+        2
+      ],
+      "text": "I left the retry wrapper alone because it's load-bearing: the payment webhook depends on it."
+    },
+    {
+      "id": "r07",
+      "kind": "reply",
+      "breaks": [],
+      "text": "I left the retry wrapper alone since the payment webhook depends on it."
+    },
+    {
+      "id": "r08",
+      "kind": "reply",
+      "breaks": [
+        4
+      ],
+      "text": "Done! \ud83c\udf89 The migration ran cleanly."
+    },
+    {
+      "id": "r09",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The migration ran cleanly on staging. Production is next."
+    },
+    {
+      "id": "r10",
+      "kind": "reply",
+      "breaks": [
+        1
+      ],
+      "text": "Certainly. I'll start with the failing test in auth.spec.ts."
+    },
+    {
+      "id": "r11",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The auth flow starts in middleware.ts. I'm happy to go deeper on any step."
+    },
+    {
+      "id": "r12",
+      "kind": "reply",
+      "breaks": [
+        3
+      ],
+      "text": "Updated the parser.\n\nSummary of changes:\n- Added a null check in parse()\n- Renamed tokenize to lex\n- Updated three tests\n- Fixed the README typo"
+    },
+    {
+      "id": "r13",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The parser crashed on empty input because tokenize returned undefined. I added a null check in parse(). Want me to also handle whitespace-only input?"
+    },
+    {
+      "id": "r14",
+      "kind": "reply",
+      "breaks": [
+        0
+      ],
+      "text": "Moved the config loader into its own module \u2014 it was imported in 14 places \u2014 and updated the imports."
+    },
+    {
+      "id": "r15",
+      "kind": "reply",
+      "breaks": [],
+      "text": "Moved the config loader into its own module (it was imported in 14 places) and updated the imports."
+    },
+    {
+      "id": "r16",
+      "kind": "reply",
+      "breaks": [],
+      "text": "Use the 2019\u20132024 range for the chart. Older data has gaps."
+    },
+    {
+      "id": "r17",
+      "kind": "reply",
+      "breaks": [
+        2
+      ],
+      "text": "The rate limiter is the load-bearing piece here; everything else is cosmetic."
+    },
+    {
+      "id": "r18",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The load balancer health check was failing because the port changed."
+    },
+    {
+      "id": "r19",
+      "kind": "reply",
+      "breaks": [
+        0,
+        1,
+        4
+      ],
+      "text": "Happy to \u2014 here's the fix. \ud83d\ude80 The index was missing, so the query did a full scan."
+    },
+    {
+      "id": "r20",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The query did a full scan because the index was missing. I added it in migration 042."
+    },
+    {
+      "id": "r21",
+      "kind": "reply",
+      "breaks": [
+        3
+      ],
+      "text": "Added the index.\n\nTo recap everything I did: I diagnosed the slow query, found the missing index, wrote migration 042, ran it on staging, and verified the query plan."
+    },
+    {
+      "id": "r22",
+      "kind": "reply",
+      "breaks": [],
+      "text": "Added the index in migration 042. The query now uses it and takes 3ms instead of 900ms."
+    },
+    {
+      "id": "r23",
+      "kind": "reply",
+      "breaks": [
+        4
+      ],
+      "text": "\u2705 Tests pass. The flaky login test is fixed too."
+    },
+    {
+      "id": "r24",
+      "kind": "reply",
+      "breaks": [],
+      "text": "Tests pass: 212 passed, 0 failed. The flaky login test is fixed too."
+    },
+    {
+      "id": "r25",
+      "kind": "reply",
+      "breaks": [
+        0,
+        1
+      ],
+      "text": "Great question \u2014 the short answer is that the hook runs before the permission check."
+    },
+    {
+      "id": "r26",
+      "kind": "reply",
+      "breaks": [],
+      "text": "The hook runs before the permission check, so it can't see the user's decision."
+    },
+    {
+      "id": "c01",
+      "kind": "code",
+      "breaks": [
+        5
+      ],
+      "text": "// increment the counter\ncount++;"
+    },
+    {
+      "id": "c02",
+      "kind": "code",
+      "breaks": [],
+      "text": "// retry once: the upstream API drops the first request after a cold start\nawait fetchWithRetry(url, 1);"
+    },
+    {
+      "id": "c03",
+      "kind": "code",
+      "breaks": [
+        6
+      ],
+      "text": "function parse(input: any) {\n  return JSON.parse(input);\n}"
+    },
+    {
+      "id": "c04",
+      "kind": "code",
+      "breaks": [],
+      "text": "function parse(input: string): unknown {\n  return JSON.parse(input);\n}"
+    },
+    {
+      "id": "c05",
+      "kind": "code",
+      "breaks": [
+        7,
+        14
+      ],
+      "text": "console.log('token', process.env.GITHUB_TOKEN);"
+    },
+    {
+      "id": "c06",
+      "kind": "code",
+      "breaks": [],
+      "text": "console.log('request finished in', ms, 'ms');"
+    },
+    {
+      "id": "c07",
+      "kind": "code",
+      "breaks": [
+        8
+      ],
+      "text": "let total = items.reduce((a, b) => a + b, 0);\nreturn total;"
+    },
+    {
+      "id": "c08",
+      "kind": "code",
+      "breaks": [],
+      "text": "let total = 0;\nfor (const item of items) total += item.price;\nreturn total;"
+    },
+    {
+      "id": "c09",
+      "kind": "code",
+      "breaks": [
+        0
+      ],
+      "text": "const message = 'Saved \u2014 you can close this tab.';"
+    },
+    {
+      "id": "c10",
+      "kind": "code",
+      "breaks": [],
+      "text": "const message = 'Saved. You can close this tab.';"
+    },
+    {
+      "id": "c11",
+      "kind": "code",
+      "breaks": [
+        2
+      ],
+      "text": "// this function is load-bearing, do not touch\nexport function boot() { init(); }"
+    },
+    {
+      "id": "c12",
+      "kind": "code",
+      "breaks": [
+        4
+      ],
+      "text": "const label = done ? '\u2705 Done' : 'Pending';"
+    },
+    {
+      "id": "c13",
+      "kind": "code",
+      "breaks": [],
+      "text": "const label = done ? 'Done' : 'Pending';"
+    },
+    {
+      "id": "c14",
+      "kind": "code",
+      "breaks": [
+        5
+      ],
+      "text": "// loop over users\nfor (const user of users) {\n  // send email to user\n  await sendEmail(user);\n}"
+    },
+    {
+      "id": "c15",
+      "kind": "code",
+      "breaks": [
+        7,
+        14
+      ],
+      "text": "logger.info({ userId: user.id, password: user.password }, 'login attempt');"
+    },
+    {
+      "id": "c16",
+      "kind": "code",
+      "breaks": [],
+      "text": "logger.info({ userId: user.id }, 'login attempt');"
+    },
+    {
+      "id": "c17",
+      "kind": "code",
+      "breaks": [
+        6
+      ],
+      "text": "const handlers: Record<string, any> = {};"
+    },
+    {
+      "id": "c18",
+      "kind": "code",
+      "breaks": [],
+      "text": "// anything above 100 is treated as a burst, see RFC-12\nconst BURST_LIMIT = 100;"
+    },
+    {
+      "id": "c19",
+      "kind": "code",
+      "breaks": [],
+      "text": "let retries = 3;\nwhile (retries > 0) {\n  retries--;\n}"
+    },
+    {
+      "id": "c20",
+      "kind": "code",
+      "breaks": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "text": "// set x to 5\nlet x: any = 5;\nconsole.log('api key:', apiKey);"
+    },
+    {
+      "id": "c21",
+      "kind": "code",
+      "breaks": [
+        12,
+        13
+      ],
+      "text": "app.get('/api/orders/:id', async (req, res) => {\n  const order = await db.query(`SELECT * FROM orders WHERE id = ${req.params.id}`);\n  res.json(order);\n});"
+    },
+    {
+      "id": "c22",
+      "kind": "code",
+      "breaks": [],
+      "text": "app.get('/api/orders/:id', async (req, res) => {\n  await requireOwner(req, req.params.id);\n  const order = await orderRepo.byId(req.params.id);\n  res.json(order);\n});"
+    },
+    {
+      "id": "c23",
+      "kind": "code",
+      "breaks": [
+        7,
+        14
+      ],
+      "text": "console.log('incoming request', req.headers.authorization, req.body);"
+    },
+    {
+      "id": "c24",
+      "kind": "code",
+      "breaks": [],
+      "text": "logger.info({ orderId: order.id, ms: Date.now() - started }, 'order fetched');"
+    },
+    {
+      "id": "c25",
+      "kind": "code",
+      "breaks": [
+        15
+      ],
+      "text": "const total = order.subtotal * 1.2;\nreturn { total: total.toFixed(2) };"
+    },
+    {
+      "id": "c26",
+      "kind": "code",
+      "breaks": [],
+      "text": "const totalCents = subtotalCents + taxCents;\nreturn { totalCents };"
+    },
+    {
+      "id": "c27",
+      "kind": "code",
+      "breaks": [
+        16
+      ],
+      "text": "// flaky on CI, revisit later\nit.skip('applies the bulk discount', async () => {\n  expect(total(items, 10)).toBe(900);\n});"
+    },
+    {
+      "id": "c28",
+      "kind": "code",
+      "breaks": [],
+      "text": "it('applies the bulk discount', async () => {\n  expect(total(items, 10)).toBe(900);\n});"
+    },
+    {
+      "id": "c29",
+      "kind": "code",
+      "breaks": [
+        17
+      ],
+      "text": "import axios from 'axios';\n\nexport const getRate = () => axios.get('https://fx.example.com/usd');"
+    },
+    {
+      "id": "c30",
+      "kind": "code",
+      "breaks": [],
+      "text": "import { apiFetch } from '../http.js';\n\nexport const getRate = () => apiFetch('https://fx.example.com/usd');"
+    },
+    {
+      "id": "c31",
+      "kind": "code",
+      "breaks": [
+        18
+      ],
+      "text": "-- migrations/2023_01_init.sql\nCREATE TABLE orders (\n  id uuid PRIMARY KEY,\n  subtotal_cents integer NOT NULL,\n  currency text NOT NULL\n);"
+    },
+    {
+      "id": "c32",
+      "kind": "code",
+      "breaks": [],
+      "text": "-- migrations/2026_09_add_currency.sql\nALTER TABLE orders ADD COLUMN currency text NOT NULL DEFAULT 'USD';"
+    },
+    {
+      "id": "c33",
+      "kind": "code",
+      "breaks": [
+        7,
+        12,
+        13,
+        14,
+        15
+      ],
+      "text": "app.get('/api/orders/:id', async (req, res) => {\n  const order = await db.query(`SELECT * FROM orders WHERE id = ${req.params.id}`);\n  console.log('order request', req.headers.authorization, req.body);\n  const total = order.subtotal * 1.2;\n  res.json({ ...order, total });\n});"
+    }
   ]
 }

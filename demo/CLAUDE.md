@@ -1,17 +1,22 @@
-# Demo shop
+# Shop API
 
-## Writing
+## Architecture
 
-- Never use em dashes. Use periods, commas, or parentheses instead.
-- Don't open a reply with "Happy to", "Great question", or "Certainly".
-- Never call code or a change "load-bearing".
-- Don't use emojis.
+- Route handlers must not touch the database directly. Go through a repository in `src/repo`.
+- Use the shared `apiFetch` wrapper for outbound HTTP. Never call `fetch` or an HTTP library directly.
+- Never add a new npm dependency. Use what is already in package.json.
 
-## Code
+## Data
 
-- Only write comments that explain why, never comments that restate what the code does.
-- Never use the `any` type in TypeScript.
+- Money is always an integer number of cents. Never use a float for money.
+- Migrations are append-only. Never edit an existing migration file.
 
-## Workflow
+## Security
 
-- Run `npm test` before saying a task is done.
+- Every endpoint that reads user data must check the caller's authorization first.
+- Never log request bodies, tokens, or anything from the `Authorization` header.
+
+## Tests
+
+- Never skip, delete, or weaken a failing test to make the suite pass. Fix the cause.
+- Never cast to `any` to silence a type error.
