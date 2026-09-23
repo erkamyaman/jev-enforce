@@ -68,7 +68,7 @@ export async function runHook(event: HookEvent, input: HookInput, deps: Deps = {
   if (!text || text.trim().length < 20) return null;
 
   const kind = event === 'stop' ? 'reply' : 'code';
-  const threshold = Number(env.JEV_ENFORCE_THRESHOLD) || 0.8;
+  const threshold = Number(env.JEV_ENFORCE_THRESHOLD) || 0.7;
   const ask = createAsk({ apiKey, fetch: deps.fetch });
   const cacheDir = env.CLAUDE_PLUGIN_DATA || join(home, '.cache', 'jev-enforce');
   const rules = await loadRules(input.cwd ?? process.cwd(), home, ask, cacheDir);

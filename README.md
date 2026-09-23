@@ -28,9 +28,28 @@ You could ask a normal LLM "does this reply break any of my rules?", but it woul
 
 Jev is a different kind of model from TypeSafe. It doesn't write text. It answers typed questions, such as yes/no with a probability, and it answers many of them in parallel in one request. So jev-enforce asks one yes/no question per rule ("does this text break rule 3?"), all at once:
 
-- **Fast:** about 100ms for the whole check, so you don't notice it.
-- **Cheap:** a fraction of a cent per check, because Jev charges only for input.
-- **Tunable:** every answer comes with a probability. You choose how sure it must be before Claude is told (0.8 by default).
+- **Fast:** about 370ms for the whole check, whether you have 5 rules or 50.
+- **Cheap:** about 3 cents per 1,000 checks, because Jev charges only for input.
+- **Tunable:** every answer comes with a probability. You choose how sure it must be before Claude is told (0.7 by default).
+
+## Benchmark
+
+46 labeled examples (26 replies, 20 file edits) against 12 rules, which is 270 individual checks. Run it yourself with `npm run bench`, and see [bench/results.md](bench/results.md) for the full output including every mistake.
+
+| Threshold | Precision | Recall | Clean texts wrongly flagged |
+| --- | --- | --- | --- |
+| 0.5 | 71.4% | 100.0% | 7 of 22 |
+| 0.6 | 85.7% | 100.0% | 4 of 22 |
+| **0.7 (default)** | **93.5%** | **96.7%** | **2 of 22** |
+| 0.8 | 93.3% | 93.3% | 2 of 22 |
+| 0.9 | 96.4% | 90.0% | 1 of 22 |
+
+Sorting rules into reply, code, both or none was right 10 times out of 12. Speed was 368ms at p50 and 417ms at p95. The whole run cost $0.0015.
+
+The four mistakes at 0.8 show where it's weak, and both weaknesses are the same kind of thing:
+
+- **Characters it can't see.** An en dash (`2019–2024`) was flagged as an em dash at 0.97. Jev judges meaning, not bytes.
+- **Code flow it can't trace.** "Use `const` when a variable is never reassigned" caused three of the four errors, because answering it means tracking whether a variable is written to later. That belongs in a linter (`prefer-const`), not here.
 
 ## Install
 
@@ -70,12 +89,12 @@ jev-enforce check --as code src/app.ts   # exits 1 if a rule is broken
 | Env | Default | |
 | --- | --- | --- |
 | `TYPESAFE_API_KEY` | none | Required. No key, no checks |
-| `JEV_ENFORCE_THRESHOLD` | `0.8` | Minimum Jev probability that a rule is broken before Claude is told |
+| `JEV_ENFORCE_THRESHOLD` | `0.7` | Minimum Jev probability that a rule is broken before Claude is told |
 | `JEV_ENFORCE_OFF` | unset | Set to `1` to disable for a session |
 
 ## Limitations
 
-- Jev judges meaning, not bytes. Rules about exact counts, dates or arithmetic ("keep replies under 200 words") are unreliable; put those in a linter.
+- Jev judges meaning, not bytes. Rules about exact characters, counts, dates or arithmetic ("keep replies under 200 words", "no em dashes" where an en dash is fine) are unreliable, and rules that need code flow analysis (`prefer-const`) belong in a linter. See the benchmark above.
 - Only the final reply of a turn and the new text of each edit are checked, not intermediate messages or whole files.
 - A rule Jev classifies as `none` is never enforced. Run `jev-enforce rules` to see how yours were sorted, and reword a rule if it landed in the wrong bucket.
 - Your reply text, edit text and rules are sent to TypeSafe's API.

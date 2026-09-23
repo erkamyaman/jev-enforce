@@ -13,7 +13,7 @@ const USAGE = `jev-enforce: make Claude Code follow your CLAUDE.md, checked by T
                                        check a file (or stdin) against your rules; exits 1 on violations
   jev-enforce hook <stop|post-edit>    Claude Code hook entry point (reads hook JSON on stdin)
 
-  env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.8), JEV_ENFORCE_OFF=1`;
+  env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.7), JEV_ENFORCE_OFF=1`;
 const readStdin = () => readFileSync(0, 'utf8');
 const message = (err) => (err instanceof Error ? err.message : String(err));
 function requireKey() {
@@ -70,7 +70,7 @@ async function main() {
         const text = !file || file === '-' ? readStdin() : readFileSync(file, 'utf8');
         const ask = createAsk({ apiKey: requireKey() });
         const rules = await loadRules(process.cwd(), homedir(), ask, cacheDir());
-        const threshold = Number(process.env.JEV_ENFORCE_THRESHOLD) || 0.8;
+        const threshold = Number(process.env.JEV_ENFORCE_THRESHOLD) || 0.7;
         const started = Date.now();
         const violations = await findViolations({ text, kind, filePath: file, rules, ask, threshold });
         const checked = rules.filter((r) => r.scope === kind || r.scope === 'both').length;
