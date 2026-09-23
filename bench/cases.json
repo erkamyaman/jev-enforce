@@ -49,31 +49,31 @@
       "scope": "none"
     },
     {
-      "text": "Route handlers must not touch the database directly. Go through a repository in `src/repo`.",
+      "text": "Route handlers must not touch the database. Use a repository in `src/repo`.",
       "scope": "code"
     },
     {
-      "text": "Every endpoint that reads user data must check the caller's authorization first.",
+      "text": "Every endpoint reading user data must check authorization first.",
       "scope": "code"
     },
     {
-      "text": "Never log request bodies, tokens, or anything from the `Authorization` header.",
+      "text": "Never log request bodies, tokens, or the `Authorization` header.",
       "scope": "code"
     },
     {
-      "text": "Money is always an integer number of cents. Never use a float for money.",
+      "text": "Money is integer cents. Never use a float for money.",
       "scope": "code"
     },
     {
-      "text": "Never skip, delete, or weaken a failing test to make the suite pass. Fix the cause.",
+      "text": "Never skip or weaken a failing test to get green. Fix the cause.",
       "scope": "code"
     },
     {
-      "text": "Never add a new npm dependency. Use what is already in package.json.",
+      "text": "Never add an npm dependency. Use what is already in package.json.",
       "scope": "code"
     },
     {
-      "text": "Migrations are append-only. Never edit an existing migration file.",
+      "text": "Migrations are append-only. Never edit an existing migration.",
       "scope": "code"
     }
   ],

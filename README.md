@@ -56,18 +56,18 @@ jev-enforce check --as reply message.txt
 
 | Threshold | Precision | Recall | Clean texts wrongly flagged |
 | --- | --- | --- | --- |
-| 0.6 | 88.0% | 97.8% | 4 of 28 |
+| 0.6 | 87.8% | 95.6% | 3 of 28 |
 | **0.7 (default)** | **93.3%** | **93.3%** | **2 of 28** |
-| 0.8 | 95.5% | 93.3% | 2 of 28 |
+| 0.8 | 95.3% | 91.1% | 2 of 28 |
 | 0.9 | 97.4% | 84.4% | 1 of 28 |
 
-346ms p50, $0.0027 for the whole run.
+348ms p50, $0.0027 for the whole run.
 
 ## What it is bad at
 
 - Exact characters. It read `2019–2024` as an em dash.
 - Dataflow. `prefer-const` rules need a linter, not a model.
-- Rules that depend on state outside the text. "Never add a dependency" scored 0.63 on a new `axios` import, because it cannot see package.json. Editing an old migration scored 0.07.
+- Rules that depend on state outside the text. "Never add an npm dependency" scored 0.56 on a new `axios` import, because it cannot see package.json. Editing an old migration scored 0.06.
 - Your reply text, edits and rules go to TypeSafe's API.
 
 ## Development
