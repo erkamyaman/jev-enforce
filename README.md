@@ -6,31 +6,65 @@ Claude Code plugin that makes Claude actually follow your CLAUDE.md: every reply
 
 ### The problem
 
-You put rules in CLAUDE.md: "no em dashes", "don't add explanatory comments", "never say load-bearing". Claude follows them for a while, then breaks them a few turns later.
+You put rules in CLAUDE.md: "no em dashes", "don't add explanatory comments", "never say load-bearing". They hold for the first few turns. Then an em dash comes back, then a `// increment the counter` comment, then "the retry wrapper is load-bearing". By turn thirty you are restating the rule in chat, which works for exactly one turn.
 
-That happens because CLAUDE.md is only context. Claude reads it once at the start of the session. After that it competes with everything else Claude has seen, like your code, the tool output, and the chat so far. As the session grows, your rules become a smaller part of what Claude pays attention to. Nothing checks the output against them.
+It is not your prompt. The most-reacted open issues on the Claude Code tracker are this same failure:
+
+| Issue | Reactions |
+| --- | --- |
+| [Repetitive rhetorical tics despite explicit style instructions](https://github.com/anthropics/claude-code/issues/77136) | 575 |
+| [Verbose code comments by default, ignores instructions to stop](https://github.com/anthropics/claude-code/issues/65961) | 239 |
+| [Claude Code cannot stop using the word "load-bearing"](https://github.com/anthropics/claude-code/issues/53454) | 181 |
+| [CLAUDE.md mandatory rules consistently ignored](https://github.com/anthropics/claude-code/issues/2544) | 45 |
+
+Three mechanics, none of which you can prompt your way out of:
+
+1. **CLAUDE.md is context, not a constraint.** It is prepended to the conversation as ordinary tokens. It carries no more weight than a stack trace you pasted or a file the agent just read, and the sampler is free to ignore all of it.
+2. **Its share of the context decays.** Your 40-line rules file is a meaningful fraction of a fresh session. Thirty turns in, competing with file reads, diffs and test output, it is a fraction of a percent of the window, and compaction can summarize it away entirely.
+3. **There is no validation step.** Generate, then emit. Nothing between the model's output and your terminal compares the two against the spec you wrote. An unenforced rule is a comment.
+
+The fix is not a better-worded rule. It is a check that runs on every turn, which is what hooks are for.
 
 ### What jev-enforce does
 
-It checks each reply and each file edit against your rules, then sends anything that breaks one back to Claude:
+It adds the missing validation step, as two hooks:
 
 ```text
-Claude writes a reply  →  jev-enforce checks it against every rule  →  a rule is broken?
-                                                                       ├─ no:  the reply goes through
-                                                                       └─ yes: Claude gets the rule quoted back and rewrites
+Stop hook            final assistant message ─┐
+PostToolUse hook     Edit/Write/MultiEdit    ─┴→ one Jev request, one yes/no question per rule
+                                                    │
+                                    all below threshold → turn ends normally
+                                    any above          → decision: "block", rules quoted in reason,
+                                                         Claude rewrites in the same turn
 ```
 
-Your rules stop being reminders and become checks that run every time.
+Your rules stop being context the model may weigh and become a gate on every turn.
 
 ### Why Jev makes this practical
 
-You could ask a normal LLM "does this reply break any of my rules?", but it would add seconds and real cost to every single turn, and its answer would be text you still have to parse.
+The obvious implementation is a second LLM call per turn: "here are 20 rules and a reply, list the violations". You pay a couple of seconds and full output-token pricing on every turn, then parse prose into a decision, and the judge itself can hallucinate a violation that isn't there.
 
-Jev is a different kind of model from TypeSafe. It doesn't write text. It answers typed questions, such as yes/no with a probability, and it answers many of them in parallel in one request. So jev-enforce asks one yes/no question per rule ("does this text break rule 3?"), all at once:
+Jev is a System One model from TypeSafe. It emits no tokens: you send state plus typed questions and get back typed answers, in this case a calibrated 0 to 1 probability per question, all evaluated in the same request. jev-enforce sends one `noul` question per rule ("does this text break rule N?") and gets back a vector of probabilities:
 
-- **Fast:** about 370ms for the whole check, whether you have 5 rules or 50.
-- **Cheap:** about 3 cents per 1,000 checks, because Jev charges only for input.
-- **Tunable:** every answer comes with a probability. You choose how sure it must be before Claude is told (0.7 by default).
+- **Flat latency in rule count.** Questions are answered in parallel, so 5 rules and 50 rules cost about the same wall clock: 368ms p50, 417ms p95 on the benchmark below. Requests are batched to stay under Jev's 32k state budget.
+- **Output tokens are free.** Input is $0.042 per 1M, so the whole 270-check benchmark run cost $0.0015, about 3 cents per 1,000 checks.
+- **The output is a number, not prose.** One threshold (`JEV_ENFORCE_THRESHOLD`, 0.7) turns the probability into allow or block, so you can trade precision against recall with the table below instead of rewriting a judge prompt.
+
+One check on the wire, trimmed:
+
+```jsonc
+// POST https://api.typesafe.ai/v1/systemone
+{
+  "model": "jev-latest",
+  "state": { "kind": "A chat reply an AI coding assistant wrote to the developer", "text": "Happy to help — I fixed the login bug." },
+  "questions": {
+    "v0": { "type": "noul", "instructions": "Rule: \"Never use em dashes.\"\nDoes the text break this rule?",
+            "criteria": { "true": "The text clearly breaks the rule.", "false": "The text follows the rule, or the rule does not apply to this text." } },
+    "v1": { "type": "noul", "instructions": "Rule: \"Don't open a reply with \\\"Happy to\\\".\"\nDoes the text break this rule?" }
+  }
+}
+// → { "answers": { "v0": { "type": "noul", "noul": 0.92 }, "v1": { "type": "noul", "noul": 0.80 } } }
+```
 
 ## Benchmark
 
