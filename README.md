@@ -1,5 +1,8 @@
 # jev-enforce
 
+[![npm](https://img.shields.io/npm/v/jev-enforce?color=cb3837&logo=npm)](https://www.npmjs.com/package/jev-enforce)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Claude Code plugin that checks every reply and every file edit against your CLAUDE.md, using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
 
 ![jev-enforce catching six broken rules in one check](demo/demo.gif)
@@ -11,6 +14,14 @@ Claude Code plugin that checks every reply and every file edit against your CLAU
 CLAUDE.md is context, not a constraint. It holds for a few turns, then a handler shows up with raw SQL in it and a test quietly becomes `it.skip`. Nothing checks the output against the rules, so this does.
 
 Jev makes it cheap enough to run every turn: it answers typed yes/no questions instead of writing text, all of them in one request. One question per rule, about 350ms, about 3 cents per 1,000 checks.
+
+## Try it
+
+Nothing to install, Node 18+ and `npx` are enough:
+
+```sh
+npx jev-enforce check --as code src/orders.ts
+```
 
 ## Install
 
@@ -36,11 +47,15 @@ No key, no checks. It cannot break a session.
 
 ## CLI
 
+Installed as a plugin, or through `npx jev-enforce`:
+
 ```sh
 jev-enforce rules                          # your rules and how each was sorted
 jev-enforce check --as code src/orders.ts  # exits 1 if a rule is broken
 jev-enforce check --as reply message.txt
 ```
+
+The CLI reads `TYPESAFE_API_KEY` from the environment, so it works in CI as a rule check on changed files.
 
 ## Settings
 
