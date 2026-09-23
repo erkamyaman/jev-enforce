@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Release $GITHUB_REF_NAME does not match package.json $version" >&2
+            exit 1
+          fi
+
+      - run: npm install -g npm@latest
+      - run: npm install
+      - run: npm test
+      - run: npm run check-dist
+      - run: npm publish
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+
+      - name: Publish to GitHub Packages under the owner scope
+        run: |
+          npm pkg set name=@${GITHUB_REPOSITORY_OWNER,,}/jev-enforce
+          npm publish --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

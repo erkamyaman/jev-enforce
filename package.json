@@ -40,5 +40,8 @@
   "bugs": {
     "url": "https://github.com/erkamyaman/jev-enforce/issues"
   },
-  "author": "erkamyaman"
+  "author": "erkamyaman",
+  "publishConfig": {
+    "access": "public"
+  }
 }
