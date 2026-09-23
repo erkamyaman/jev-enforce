@@ -2,10 +2,9 @@
 
 Claude Code plugin that checks every reply and every file edit against your CLAUDE.md, using TypeSafe's Jev. Break a rule and Claude gets it quoted back and fixes it, in the same turn.
 
-[![jev-enforce catching six broken rules in one check](demo/demo.png)](demo/demo.mov)
+![jev-enforce catching six broken rules in one check](demo/demo.gif)
 
-<sub><a href="demo/demo.mov">▶ 9 second demo</a> · the handler it is checking is <a href="demo/src/orders.ts">demo/src/orders.ts</a></sub>
-
+<sub>The handler it is checking is <a href="demo/src/orders.ts">demo/src/orders.ts</a>.</sub>
 
 ## Why
 
