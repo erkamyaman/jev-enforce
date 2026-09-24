@@ -45,6 +45,7 @@ No key, no checks. It cannot break a session.
 - Reads the same rule files Claude Code does: `~/.claude/CLAUDE.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, `.claude/rules/**`, and `AGENTS.md` when the project has no CLAUDE.md, matching Claude Code's own precedence. Each bullet is one rule.
 - Sorts each rule once, cached: does it constrain replies, code, both, or neither. Git and workflow rules land in neither and are skipped.
 - A `Stop` hook checks the final reply. A `PostToolUse` hook checks Edit, Write and MultiEdit.
+- With `JEV_ENFORCE_MODE=end`, edits are only recorded while Claude works. The `Stop` hook checks every edited file and the reply together, in parallel, so a turn pays for one check no matter how many edits it made.
 - Broken rules come back as `decision: "block"` with the rules quoted, so Claude fixes it before you see it. Once per turn, so it cannot loop.
 
 ## CLI
@@ -65,6 +66,7 @@ The CLI reads `TYPESAFE_API_KEY` from the environment, so it works in CI as a ru
 | --- | --- | --- |
 | `TYPESAFE_API_KEY` | none | Required |
 | `JEV_ENFORCE_THRESHOLD` | `0.7` | How sure Jev must be before Claude is told |
+| `JEV_ENFORCE_MODE` | `turn` | `end` checks all edits once when the turn ends, instead of after each edit |
 | `JEV_ENFORCE_OFF` | unset | `1` disables it |
 
 ## Benchmark

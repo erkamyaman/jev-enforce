@@ -200,3 +200,43 @@ test('post-edit hook ignores edits to AGENTS.md itself', async () => {
   );
   assert.equal(out, null);
 });
+
+test('end mode queues edits without calling Jev, then checks them all at stop', async () => {
+  const { home, project, env } = setup();
+  const endEnv = { ...env, JEV_ENFORCE_MODE: 'end' };
+  const log: FakeLog = { calls: [] };
+  const fetch = fakeJev(log);
+  const edit = (file: string, new_string: string) =>
+    runHook(
+      'post-edit',
+      { cwd: project, session_id: 's1', tool_name: 'Edit', tool_input: { file_path: join(project, file), new_string } },
+      { env: endEnv, home, fetch },
+    );
+  assert.equal(await edit('a.ts', '// increment the counter by one\ncount++;'), null);
+  assert.equal(await edit('b.ts', 'export const total = items.length;'), null);
+  assert.equal(log.calls.length, 0);
+
+  const out = await runHook(
+    'stop',
+    { cwd: project, session_id: 's1', last_assistant_message: 'Fixed the login bug. The token check now runs first.' },
+    { env: endEnv, home, fetch },
+  );
+  assert.equal(out?.decision, 'block');
+  assert.match(out?.reason ?? '', /a\.ts/);
+  assert.doesNotMatch(out?.reason ?? '', /b\.ts/);
+  assert.match(out?.reason ?? '', /explanatory comments/);
+  assert.match(out?.systemMessage ?? '', /1 CLAUDE\.md rule broken/);
+});
+
+test('end mode clears the queue after a check', async () => {
+  const { home, project, env } = setup();
+  const endEnv = { ...env, JEV_ENFORCE_MODE: 'end' };
+  await runHook(
+    'post-edit',
+    { cwd: project, session_id: 's2', tool_name: 'Write', tool_input: { file_path: join(project, 'a.ts'), content: '// increment the counter by one\ncount++;' } },
+    { env: endEnv, home, fetch: fakeJev() },
+  );
+  const stop = { cwd: project, session_id: 's2', last_assistant_message: 'Done.' };
+  assert.equal((await runHook('stop', stop, { env: endEnv, home, fetch: fakeJev() }))?.decision, 'block');
+  assert.equal(await runHook('stop', stop, { env: endEnv, home, fetch: fakeJev() }), null);
+});
