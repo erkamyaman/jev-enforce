@@ -1,3 +1,4 @@
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { findViolations, formatReason } from './check.js';
@@ -17,6 +18,24 @@ function editedText(input) {
     }
 }
 const isRuleFile = (filePath) => /^(CLAUDE|AGENTS).*\.md$/i.test(basename(filePath)) || /[\\/]\.claude[\\/]rules[\\/]/.test(filePath);
+function pendingFile(dataDir, sessionId = 'default') {
+    return join(dataDir, 'pending', `${sessionId.replace(/[^\w-]/g, '_')}.json`);
+}
+function readPending(file) {
+    try {
+        return JSON.parse(readFileSync(file, 'utf8'));
+    }
+    catch {
+        return {};
+    }
+}
+function brokenResult(n, reason) {
+    return {
+        decision: 'block',
+        reason,
+        systemMessage: `jev-enforce: ${n} CLAUDE.md rule${n === 1 ? '' : 's'} broken, sent back to Claude`,
+    };
+}
 /** Runs one hook event. Returns the JSON to print, or null to let Claude continue untouched. */
 export async function runHook(event, input, deps = {}) {
     const env = deps.env ?? process.env;
@@ -24,6 +43,9 @@ export async function runHook(event, input, deps = {}) {
     const apiKey = env.TYPESAFE_API_KEY;
     if (!apiKey || env.JEV_ENFORCE_OFF === '1')
         return null;
+    const atEnd = env.JEV_ENFORCE_MODE === 'end';
+    const dataDir = env.CLAUDE_PLUGIN_DATA || join(home, '.cache', 'jev-enforce');
+    const queue = pendingFile(dataDir, input.session_id);
     let text;
     let filePath;
     if (event === 'stop') {
@@ -37,20 +59,46 @@ export async function runHook(event, input, deps = {}) {
             return null;
         text = editedText(input);
     }
-    if (!text || text.trim().length < 20)
+    const hasText = !!text && text.trim().length >= 20;
+    if (atEnd && event === 'post-edit') {
+        if (!hasText)
+            return null;
+        const pending = readPending(queue);
+        (pending[filePath ?? ''] ??= []).push(text);
+        mkdirSync(join(dataDir, 'pending'), { recursive: true });
+        writeFileSync(queue, JSON.stringify(pending));
         return null;
-    const kind = event === 'stop' ? 'reply' : 'code';
+    }
+    const edits = atEnd ? readPending(queue) : {};
+    if (atEnd)
+        rmSync(queue, { force: true });
+    if (!hasText && !Object.keys(edits).length)
+        return null;
     const threshold = Number(env.JEV_ENFORCE_THRESHOLD) || 0.7;
     const ask = createAsk({ apiKey, fetch: deps.fetch });
-    const cacheDir = env.CLAUDE_PLUGIN_DATA || join(home, '.cache', 'jev-enforce');
-    const rules = await loadRules(input.cwd ?? process.cwd(), home, ask, cacheDir);
-    const violations = await findViolations({ text, kind, filePath, rules, ask, threshold });
-    if (!violations.length)
+    const rules = await loadRules(input.cwd ?? process.cwd(), home, ask, dataDir);
+    if (!atEnd) {
+        const kind = event === 'stop' ? 'reply' : 'code';
+        const violations = await findViolations({ text: text, kind, filePath, rules, ask, threshold });
+        return violations.length ? brokenResult(violations.length, formatReason(violations, kind)) : null;
+    }
+    const checks = [];
+    if (hasText) {
+        checks.push(findViolations({ text: text, kind: 'reply', rules, ask, threshold }).then((violations) => ({
+            label: 'reply',
+            kind: 'reply',
+            violations,
+        })));
+    }
+    for (const [file, parts] of Object.entries(edits)) {
+        checks.push(findViolations({ text: parts.join('\n'), kind: 'code', filePath: file, rules, ask, threshold }).then((violations) => ({ label: file, kind: 'code', violations })));
+    }
+    const broken = (await Promise.all(checks)).filter((c) => c.violations.length);
+    if (!broken.length)
         return null;
-    const n = violations.length;
-    return {
-        decision: 'block',
-        reason: formatReason(violations, kind),
-        systemMessage: `jev-enforce: ${n} CLAUDE.md rule${n === 1 ? '' : 's'} broken, sent back to Claude`,
-    };
+    const n = broken.reduce((sum, c) => sum + c.violations.length, 0);
+    const reason = broken
+        .map((c) => (c.kind === 'code' ? `In ${c.label}: ${formatReason(c.violations, c.kind)}` : formatReason(c.violations, c.kind)))
+        .join('\n\n');
+    return brokenResult(n, reason);
 }

@@ -14,7 +14,8 @@ const USAGE = `jev-enforce: make Claude Code follow your CLAUDE.md, checked by T
                                        check a file (or stdin) against your rules; exits 1 on violations
   jev-enforce hook <stop|post-edit>    Claude Code hook entry point (reads hook JSON on stdin)
 
-  env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.7), JEV_ENFORCE_OFF=1`;
+  env: TYPESAFE_API_KEY (required), JEV_ENFORCE_THRESHOLD (default 0.7), JEV_ENFORCE_OFF=1,
+       JEV_ENFORCE_MODE=end (check all edits once when the turn ends)`;
 
 const readStdin = () => readFileSync(0, 'utf8');
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
