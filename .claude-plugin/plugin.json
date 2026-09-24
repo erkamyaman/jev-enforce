@@ -1,6 +1,6 @@
 {
   "name": "jev-enforce",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Make Claude actually follow your CLAUDE.md: every reply and edit is checked against each rule in one ~100ms TypeSafe Jev request",
   "author": {
     "name": "erkamyaman",
