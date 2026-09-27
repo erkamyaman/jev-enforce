@@ -46,7 +46,7 @@ No key, no checks. It cannot break a session.
 - Sorts each rule once, cached: does it constrain replies, code, both, or neither. Git and workflow rules land in neither and are skipped.
 - A `Stop` hook checks the final reply. A `PostToolUse` hook checks Edit, Write and MultiEdit.
 - With `JEV_ENFORCE_MODE=end`, edits are only recorded while Claude works. The `Stop` hook checks every edited file and the reply together, in parallel, so a turn pays for one check no matter how many edits it made.
-- Broken rules come back as `decision: "block"` with the rules quoted, so Claude fixes it before you see it. Once per turn, so it cannot loop.
+- Broken rules come back as `decision: "block"` with the rules quoted, so Claude fixes it before you see it. Once per turn, so it cannot loop, which also means the fix itself is not re-checked.
 
 ## CLI
 
@@ -84,6 +84,7 @@ The CLI reads `TYPESAFE_API_KEY` from the environment, so it works in CI as a ru
 
 ## What it is bad at
 
+- It is a model, not a guarantee. At the default threshold about 1 in 15 flags is wrong and about 1 in 15 broken rules slips through.
 - Exact characters. It read `2019–2024` as an em dash.
 - Dataflow. `prefer-const` rules need a linter, not a model.
 - Rules that depend on state outside the text. "Never add an npm dependency" scored 0.56 on a new `axios` import, because it cannot see package.json. Editing an old migration scored 0.06.
