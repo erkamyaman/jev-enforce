@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           registry-url: https://registry.npmjs.org
 
       - name: Check the tag matches package.json
@@ -36,7 +36,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 26
           registry-url: https://npm.pkg.github.com
 
       - name: Publish to GitHub Packages under the owner scope
